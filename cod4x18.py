@@ -18,9 +18,10 @@
 #
 # CHANGELOG:
 #           0.1 - Initial release
+#           0.2 - Added support for B3Hide plugin, force ID64
 
 __author__ = 'Leiizko'
-__version__ = '0.1'
+__version__ = '0.2'
 
 
 import b3.clients
@@ -44,22 +45,28 @@ class Cod4X18Parser(b3.parsers.cod4.Cod4Parser):
         'kickbyfullname': 'kick %(cid)s'
     }
 
-    _regPlayer = re.compile(r'^\s*(?P<slot>[0-9]+)\s+'
-                            r'(?P<score>[0-9-]+)\s+'
-                            r'(?P<ping>[0-9]+)\s+'
-                            r'(?P<guid>[0-9]+)\s+'
-                            r'(?P<steam>[0-9]+)\s+'
-                            r'(?P<name>.*?)\s+'
-                            r'(?P<ip>(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}'
-                            r'(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])):?'
-                            r'(?P<port>-?[0-9]{1,5})\s*', re.IGNORECASE | re.VERBOSE)
-
-    _regPlayerShort = re.compile(r'^\s*(?P<slot>[0-9]+)\s+'
-                                 r'(?P<score>[0-9-]+)\s+'
-                                 r'(?P<ping>[0-9]+)\s+'
-                                 r'(?P<guid>[0-9]+)\s+'
-                                 r'(?P<steam>[0-9]+)\s+'
-                                 r'(?P<name>.*?)\s+', re.IGNORECASE | re.VERBOSE)
+    def startup(self):
+        """
+        Called after the parser is created before run().
+        """
+        blank = self.write('sv_usesteam64id  1', maxRetries=3)
+        data = self.write('plugininfo b3hide', maxRetries=3)
+        if data and len(data) < 50:
+            self._regPlayer = re.compile(r'^\s*(?P<slot>[0-9]+)\s+'
+                                    r'(?P<score>[0-9-]+)\s+'
+                                    r'(?P<ping>[0-9]+)\s+'
+                                    r'(?P<guid>[0-9]+)\s+'
+                                    r'(?P<steam>[0-9]+)\s+'
+                                    r'(?P<name>.*?)\s+'
+                                    r'(?P<ip>(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}'
+                                    r'(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])):?'
+                                    r'(?P<port>-?[0-9]{1,5})\s*', re.IGNORECASE | re.VERBOSE)
+            self._regPlayerShort = re.compile(r'^\s*(?P<slot>[0-9]+)\s+'
+                                         r'(?P<score>[0-9-]+)\s+'
+                                         r'(?P<ping>[0-9]+)\s+'
+                                         r'(?P<guid>[0-9]+)\s+'
+                                         r'(?P<steam>[0-9]+)\s+'
+                                         r'(?P<name>.*?)\s+', re.IGNORECASE | re.VERBOSE)
 								 
     def unban(self, client, reason='', admin=None, silent=False, *kwargs):
         """
